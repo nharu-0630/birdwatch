@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 import time
 from datetime import datetime
 from os.path import abspath, dirname, join
@@ -13,7 +14,11 @@ from handler.twitter import TwitterHandler, TwitterHandlerProps
 from handler.youtube import YouTubeHandler, YouTubeHandlerProps
 
 
-def schedule_youtube():
+def run_concurrently(job):
+    threading.Thread(target=job).start()
+
+
+def get_youtube_handler() -> YouTubeHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "YouTube")
     props = YouTubeHandlerProps(
         output_dir=output_dir,
@@ -33,11 +38,10 @@ def schedule_youtube():
         request_count=3,
         comment_request_count=50,
     )
-    handler = YouTubeHandler(props)
-    schedule.every(4).hours.do(handler.fetch)
+    return YouTubeHandler(props)
 
 
-def schedule_twitter():
+def get_twitter_handler() -> TwitterHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Twitter")
     props = TwitterHandlerProps(
         output_dir=output_dir,
@@ -53,15 +57,13 @@ def schedule_twitter():
         request_count=3,
         quote_request_count=10,
     )
-    handler = TwitterHandler(props)
-    schedule.every(3).hours.do(handler.fetch)
+    return TwitterHandler(props)
 
 
-def schedule_birdwatch():
+def get_birdwatch_handler() -> BirdwatchHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Birdwatch")
     props = BirdwatchHandlerProps(output_dir=output_dir, handle_name="Birdwatch")
-    handler = BirdwatchHandler(props)
-    schedule.every(4).hours.do(handler.fetch)
+    return BirdwatchHandler(props)
 
 
 if __name__ == "__main__":
@@ -74,9 +76,25 @@ if __name__ == "__main__":
     dotenv_path = join(dir_path, ".env")
     load_dotenv(dotenv_path, verbose=True)
 
-    schedule_youtube()
-    schedule_twitter()
-    schedule_birdwatch()
+    youtube_handler = get_youtube_handler()
+    schedule.every(4).hours.do(run_concurrently, youtube_handler.fetch)
+
+    twitter_handler = get_twitter_handler()
+    schedule.every(3).hours.do(run_concurrently, twitter_handler.fetch)
+
+    birdwatch_handler = get_birdwatch_handler()
+    schedule.every(4).hours.do(run_concurrently, birdwatch_handler.fetch)
+
+    threads = []
+    threads.append(threading.Thread(target=youtube_handler.fetch))
+    threads.append(threading.Thread(target=twitter_handler.fetch))
+    threads.append(threading.Thread(target=birdwatch_handler.fetch))
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
     while True:
         schedule.run_pending()

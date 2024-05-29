@@ -267,4 +267,4 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,dotenv,venv,visualstudiocode,macos,windows
 
-src/cert
+cert
