@@ -9,8 +9,9 @@ from pathlib import Path
 import schedule
 from dotenv import load_dotenv
 
-from handler.birdwatch import BirdwatchHandler, BirdwatchHandlerProps
-from handler.twitter import TwitterHandler, TwitterHandlerProps
+from batch.birdwatch_ref import BirdwatchRefBatch, BirdwatchRefBatchProps
+from handler.birdwatch_raw import BirdwatchRawHandler, BirdwatchRawHandlerProps
+from handler.twitter_quote import TwitterQuoteHandler, TwitterQuoteHandlerProps
 from handler.youtube import YouTubeHandler, YouTubeHandlerProps
 
 
@@ -41,9 +42,9 @@ def get_youtube_handler() -> YouTubeHandler:
     return YouTubeHandler(props)
 
 
-def get_twitter_handler() -> TwitterHandler:
+def get_twitter_quote_handler() -> TwitterQuoteHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Twitter")
-    props = TwitterHandlerProps(
+    props = TwitterQuoteHandlerProps(
         output_dir=output_dir,
         handle_name="PressUser",
         cookie_path=str(os.environ.get("TWITTER_COOKIE_PATH")),
@@ -57,13 +58,24 @@ def get_twitter_handler() -> TwitterHandler:
         request_count=3,
         quote_request_count=10,
     )
-    return TwitterHandler(props)
+    return TwitterQuoteHandler(props)
 
 
-def get_birdwatch_handler() -> BirdwatchHandler:
+def get_birdwatch_raw_handler() -> BirdwatchRawHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Birdwatch")
-    props = BirdwatchHandlerProps(output_dir=output_dir, handle_name="Birdwatch")
-    return BirdwatchHandler(props)
+    props = BirdwatchRawHandlerProps(output_dir=output_dir, handle_name="Birdwatch")
+    return BirdwatchRawHandler(props)
+
+
+def get_birdwatch_ref_batch() -> BirdwatchRefBatch:
+    input_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Birdwatch")
+    output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "BirdwatchRef")
+    props = BirdwatchRefBatchProps(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        cookie_path=str(os.environ.get("TWITTER_COOKIE_PATH")),
+    )
+    return BirdwatchRefBatch(props)
 
 
 if __name__ == "__main__":
@@ -79,16 +91,19 @@ if __name__ == "__main__":
     youtube_handler = get_youtube_handler()
     schedule.every(4).hours.do(run_concurrently, youtube_handler.fetch)
 
-    twitter_handler = get_twitter_handler()
-    schedule.every(3).hours.do(run_concurrently, twitter_handler.fetch)
+    twitter_quote_handler = get_twitter_quote_handler()
+    schedule.every(3).hours.do(run_concurrently, twitter_quote_handler.fetch)
 
-    birdwatch_handler = get_birdwatch_handler()
-    schedule.every(4).hours.do(run_concurrently, birdwatch_handler.fetch)
+    birdwatch_raw_handler = get_birdwatch_raw_handler()
+    schedule.every(4).hours.do(run_concurrently, birdwatch_raw_handler.fetch)
+
+    birdwatch_ref_batch = get_birdwatch_ref_batch()
+    schedule.every().day.at("00:00").do(run_concurrently, birdwatch_ref_batch.run)
 
     threads = []
     threads.append(threading.Thread(target=youtube_handler.fetch))
-    threads.append(threading.Thread(target=twitter_handler.fetch))
-    threads.append(threading.Thread(target=birdwatch_handler.fetch))
+    threads.append(threading.Thread(target=twitter_quote_handler.fetch))
+    threads.append(threading.Thread(target=birdwatch_raw_handler.fetch))
 
     for thread in threads:
         thread.start()

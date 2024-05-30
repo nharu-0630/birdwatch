@@ -1,7 +1,7 @@
 import os
 import urllib.error
 import urllib.request
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 
@@ -14,7 +14,7 @@ FILENAME_KEY = {
 BASE_URL = "https://ton.twimg.com/birdwatch-public-data/"
 
 
-class BirdwatchHandlerProps:
+class BirdwatchRawHandlerProps:
     def __init__(self, output_dir: str, handle_name: str):
         self.output_dir = output_dir
         self.handle_name = handle_name
@@ -27,25 +27,31 @@ class BirdwatchHandlerProps:
 
     @staticmethod
     def from_dict(data: dict):
-        return BirdwatchHandlerProps(
+        return BirdwatchRawHandlerProps(
             output_dir=data["output_dir"],
             handle_name=data["handle_name"],
         )
 
 
-class BirdwatchHandler:
-    def __init__(self, props: BirdwatchHandlerProps):
+class BirdwatchRawHandler:
+    def __init__(self, props: BirdwatchRawHandlerProps):
         self.props = props
         self.logger = getLogger(__name__)
 
     def fetch(self):
-        output_path = os.path.join(self.props.output_dir, self.props.handle_name)
+        self.__fetch_target_date(date.today())
+        self.__fetch_target_date(date.today() - timedelta(days=1))
+
+    def __fetch_target_date(self, target_date: date):
+        output_path = os.path.join(
+            self.props.output_dir, self.props.handle_name, str(target_date)
+        )
         if not Path(output_path).exists():
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         for key, value in FILENAME_KEY.items():
             index = 0
             while True:
-                url = f"{BASE_URL}{datetime.today().strftime('%Y/%m/%d')}/{key}/{value}-{str(index).zfill(5)}.tsv"
+                url = f"{BASE_URL}{target_date.strftime('%Y/%m/%d')}/{key}/{value}-{str(index).zfill(5)}.tsv"
                 self.logger.info("Downloading: %s", url)
                 if not os.path.exists(
                     os.path.join(output_path, f"{value}-{str(index).zfill(5)}.tsv")

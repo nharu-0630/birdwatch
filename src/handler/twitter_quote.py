@@ -19,7 +19,7 @@ BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Z
 TWEET_COUNT = 20
 
 
-class TwitterHandlerProps:
+class TwitterQuoteHandlerProps:
     def __init__(
         self,
         output_dir: str,
@@ -66,7 +66,7 @@ class TwitterHandlerProps:
 
     @staticmethod
     def from_dict(props: dict):
-        return TwitterHandlerProps(
+        return TwitterQuoteHandlerProps(
             output_dir=props["output_dir"],
             handle_name=props["handle_name"],
             cookie_path=props["cookie_path"],
@@ -82,8 +82,8 @@ class TwitterHandlerProps:
         )
 
 
-class TwitterHandler:
-    def __init__(self, props: TwitterHandlerProps):
+class TwitterQuoteHandler:
+    def __init__(self, props: TwitterQuoteHandlerProps):
         self.props = props
         self.logger = getLogger(__name__)
 
