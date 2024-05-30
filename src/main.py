@@ -63,7 +63,7 @@ def get_twitter_quote_handler() -> TwitterQuoteHandler:
 
 def get_birdwatch_raw_handler() -> BirdwatchRawHandler:
     output_dir = os.path.join(str(os.environ.get("RAW_DATA_DIR")), "Birdwatch")
-    props = BirdwatchRawHandlerProps(output_dir=output_dir, handle_name="Birdwatch")
+    props = BirdwatchRawHandlerProps(output_dir=output_dir)
     return BirdwatchRawHandler(props)
 
 

@@ -15,21 +15,18 @@ BASE_URL = "https://ton.twimg.com/birdwatch-public-data/"
 
 
 class BirdwatchRawHandlerProps:
-    def __init__(self, output_dir: str, handle_name: str):
+    def __init__(self, output_dir: str):
         self.output_dir = output_dir
-        self.handle_name = handle_name
 
     def to_dict(self):
         return {
             "output_dir": self.output_dir,
-            "handle_name": self.handle_name,
         }
 
     @staticmethod
     def from_dict(data: dict):
         return BirdwatchRawHandlerProps(
             output_dir=data["output_dir"],
-            handle_name=data["handle_name"],
         )
 
 
@@ -43,9 +40,7 @@ class BirdwatchRawHandler:
         self.__fetch_target_date(date.today() - timedelta(days=1))
 
     def __fetch_target_date(self, target_date: date):
-        output_path = os.path.join(
-            self.props.output_dir, self.props.handle_name, str(target_date)
-        )
+        output_path = os.path.join(self.props.output_dir, str(target_date))
         if not Path(output_path).exists():
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         for key, value in FILENAME_KEY.items():
