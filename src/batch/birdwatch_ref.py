@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from datetime import timedelta
+from datetime import date, timedelta
 from glob import glob
 from logging import getLogger
 from pathlib import Path
@@ -42,8 +42,12 @@ class BirdwatchRefBatch:
         self.logger = getLogger(__name__)
 
     def run(self):
+        self.__fetch_target_date(date.today())
+        self.__fetch_target_date(date.today() - timedelta(days=1))
+
+    def __fetch_target_date(self, target_date: date):
         notes_path_list = glob(
-            os.path.join(self.props.input_dir, "**", "notes-*.json"), recursive=True
+            os.path.join(self.props.input_dir, str(target_date), "notes-*.json")
         )
         notes_data_list = []
         for notes_path in notes_path_list:
