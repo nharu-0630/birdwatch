@@ -42,7 +42,7 @@ class BirdwatchRawHandler:
     def __fetch_target_date(self, target_date: date):
         output_path = os.path.join(self.props.output_dir, str(target_date))
         if not Path(output_path).exists():
-            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(output_path).mkdir(parents=True, exist_ok=True)
         for key, value in FILENAME_KEY.items():
             index = 0
             while True:
