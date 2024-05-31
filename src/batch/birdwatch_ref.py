@@ -43,7 +43,7 @@ class BirdwatchRefBatch:
 
     def run(self):
         notes_path_list = glob(
-            os.path.join(self.props.input_dir, "notes-*.json"), recursive=False
+            os.path.join(self.props.input_dir, "**", "notes-*.json"), recursive=True
         )
         notes_data_list = []
         for notes_path in notes_path_list:
